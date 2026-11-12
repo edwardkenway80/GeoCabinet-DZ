@@ -1,0 +1,12 @@
+PASS — base schema commits
+PASS — workflow template integrity FK
+PASS — deliverable version ownership FK
+PASS — technical files use document versioning
+PASS — schema-qualified RLS
+PASS — pre-mission inquiry exists separately
+PASS — exchange requests require mission
+PASS — partner grants are integration-scoped
+PASS — actor type identity checks
+PASS — webhook composite FK has candidate key
+PASS — no composite SET NULL
+NOTE — Static assertions only; no PostgreSQL execution or RLS integration test was performed.
