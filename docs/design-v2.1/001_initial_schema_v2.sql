@@ -159,6 +159,10 @@ CREATE TABLE properties (
     source_crs      varchar(40),
     source_scale    varchar(40),
     positional_accuracy_m numeric(12,3),
+    CHECK (
+    positional_accuracy_m IS NULL
+    OR positional_accuracy_m >= 0
+    ),
     data_source     varchar(180),
     surveyed_at     date,
     registry_status varchar(30) NOT NULL DEFAULT 'unverified'
@@ -187,6 +191,10 @@ CREATE TABLE parcels (
     area_calculated_at timestamptz,
     source_crs      varchar(40),
     positional_accuracy_m numeric(12,3),
+    CHECK (
+    positional_accuracy_m IS NULL
+    OR positional_accuracy_m >= 0
+    ),
     valid_from      date,
     valid_to        date,
     record_status   varchar(25) NOT NULL DEFAULT 'active'
@@ -223,8 +231,12 @@ CREATE TABLE property_parties (
       REFERENCES properties(tenant_id, id) ON DELETE RESTRICT,
     FOREIGN KEY (tenant_id, party_id)
       REFERENCES parties(tenant_id, id) ON DELETE RESTRICT,
-    CHECK ((share_numerator IS NULL AND share_denominator IS NULL) OR
-           (share_numerator >= 0 AND share_denominator > 0)),
+    CHECK (
+       (share_numerator IS NULL AND share_denominator IS NULL)
+       OR
+       (share_numerator IS NOT NULL AND share_denominator IS NOT NULL
+        AND share_numerator >= 0 AND share_denominator > 0)
+     ),
     CHECK (valid_to IS NULL OR valid_from IS NULL OR valid_to >= valid_from)
 );
 CREATE INDEX ix_property_parties_property ON property_parties(tenant_id, property_id);
@@ -247,8 +259,12 @@ CREATE TABLE parcel_parties (
       REFERENCES parcels(tenant_id, id) ON DELETE RESTRICT,
     FOREIGN KEY (tenant_id, party_id)
       REFERENCES parties(tenant_id, id) ON DELETE RESTRICT,
-    CHECK ((share_numerator IS NULL AND share_denominator IS NULL) OR
-           (share_numerator >= 0 AND share_denominator > 0)),
+    CHECK (
+       (share_numerator IS NULL AND share_denominator IS NULL)
+       OR
+       (share_numerator IS NOT NULL AND share_denominator IS NOT NULL
+        AND share_numerator >= 0 AND share_denominator > 0)
+     ),
     CHECK (valid_to IS NULL OR valid_from IS NULL OR valid_to >= valid_from)
 );
 
@@ -686,6 +702,7 @@ CREATE TABLE quotes (
     notes           text,
     created_at      timestamptz NOT NULL DEFAULT now(),
     UNIQUE (tenant_id, id),
+    UNIQUE (tenant_id, mission_id, id),
     UNIQUE (tenant_id, quote_number),
     FOREIGN KEY (tenant_id, mission_id)
       REFERENCES missions(tenant_id, id) ON DELETE RESTRICT,
@@ -725,8 +742,8 @@ CREATE TABLE invoices (
     UNIQUE (tenant_id, invoice_number),
     FOREIGN KEY (tenant_id, mission_id)
       REFERENCES missions(tenant_id, id) ON DELETE RESTRICT,
-    FOREIGN KEY (tenant_id, quote_id)
-      REFERENCES quotes(tenant_id, id) ON DELETE RESTRICT,
+    FOREIGN KEY (tenant_id, mission_id, quote_id)
+      REFERENCES quotes(tenant_id, mission_id, id) ON DELETE RESTRICT,
     CHECK (due_date IS NULL OR due_date >= issue_date)
 );
 
