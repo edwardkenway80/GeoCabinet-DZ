@@ -1,3 +1,6 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-# Create your models here.
+class CustomUser(AbstractUser):
+    # سنضيف حقولنا الخاصة لاحقاً بناءً على ERD v2.1
+    pass
