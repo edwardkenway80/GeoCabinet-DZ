@@ -1,0 +1,5 @@
+
+Django==5.2.19
+psycopg==3.3.9
+psycopg-binary==3.3.9
+python-dotenv==1.2.4
