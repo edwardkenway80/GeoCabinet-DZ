@@ -16,6 +16,9 @@ import ParametresPage from './pages/ParametresPage'
 import PlatformLayout from './pages/platform-admin/PlatformLayout'
 import PlatformOverviewPage from './pages/platform-admin/PlatformOverviewPage'
 import PlatformBureauxPage from './pages/platform-admin/PlatformBureauxPage'
+import PlatformUsersPage from './pages/platform-admin/PlatformUsersPage'
+import PlatformUserDetailsPage from './pages/platform-admin/PlatformUserDetailsPage'
+import PlatformBureauDetailsPage from './pages/platform-admin/PlatformBureauDetailsPage'
 import PlatformComingSoonPage from './pages/platform-admin/PlatformComingSoonPage'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -82,13 +85,9 @@ function AppRoutes() {
         <Route index element={<Navigate to="/platform-admin/overview" replace />} />
         <Route path="overview" element={<PlatformOverviewPage />} />
         <Route path="bureaux" element={<PlatformBureauxPage />} />
-        <Route path="users" element={
-          <PlatformComingSoonPage
-            module="إدارة المستخدمين"
-            description="جميع الحسابات المسجلة في المنصة، مراجعة الحالات، الروابط بالمكاتب، وصلاحيات مسير المنصة."
-            status="pending-api"
-          />
-        } />
+        <Route path="bureaux/:tenantId" element={<PlatformBureauDetailsPage />} />
+        <Route path="users" element={<PlatformUsersPage />} />
+        <Route path="users/:userId" element={<PlatformUserDetailsPage />} />
         <Route path="notifications" element={
           <PlatformComingSoonPage
             module="الإشعارات المركزية"

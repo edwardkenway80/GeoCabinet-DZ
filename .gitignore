@@ -221,3 +221,13 @@ __marimo__/
 
 # env
 .env
+
+# Frontend (Node/React)
+node_modules/
+frontend/dist/
+frontend/build/
+
+# Sensitive scripts and documents
+set_admin_pass.py
+test_api_access.py
+sudo.docx

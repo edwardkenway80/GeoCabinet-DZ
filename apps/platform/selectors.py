@@ -10,6 +10,9 @@ NOT covered by tenant RLS (see 001_initial_schema_v2.sql comments).
 
 from __future__ import annotations
 
+import uuid
+from typing import Optional
+
 from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
 
@@ -62,3 +65,61 @@ def get_platform_stats():
         'total_users': total_users,
         'platform_admins': platform_admins,
     }
+
+
+def get_all_users():
+    """
+    Return all users ordered by email.
+    Safe for platform admin: gc.users is NOT covered by tenant RLS.
+    Excludes password_hash automatically via serializer.
+    """
+    return User.objects.all().order_by('email')
+
+
+def get_user_by_id(user_id: uuid.UUID) -> Optional[User]:
+    """
+    Return a single user by ID, or None if not found.
+    Safe for platform admin: gc.users is NOT covered by tenant RLS.
+    """
+    try:
+        return User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return None
+
+
+def get_user_memberships_platform(user_id: uuid.UUID):
+    """
+    Return all active memberships for a user across all tenants,
+    with tenant name and slug included.
+    Safe for platform admin: gc.tenant_memberships read at platform level
+    (no app.tenant_id context required for this selector).
+    """
+    return (
+        TenantMembership.objects.filter(user_id=user_id, is_active=True)
+        .select_related('tenant')
+        .order_by('tenant__name')
+    )
+
+
+def get_tenant_by_id_platform(tenant_id: uuid.UUID) -> Optional[Tenant]:
+    """
+    Return a single tenant by ID, or None if not found.
+    Safe for platform admin: gc.tenants is NOT covered by tenant RLS.
+    """
+    try:
+        return Tenant.objects.get(id=tenant_id)
+    except Tenant.DoesNotExist:
+        return None
+
+
+def get_tenant_members_platform(tenant_id: uuid.UUID):
+    """
+    Return all memberships for a tenant with user details.
+    Safe for platform admin: reads gc.tenant_memberships and gc.users
+    at platform level (no app.tenant_id context required).
+    """
+    return (
+        TenantMembership.objects.filter(tenant_id=tenant_id)
+        .select_related('user')
+        .order_by('user__email')
+    )
