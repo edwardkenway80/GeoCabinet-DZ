@@ -14,7 +14,10 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from the project root explicitly.
+# load_dotenv() without a path relies on cwd which may differ when Django
+# is started from a different working directory (e.g. via a task runner).
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,6 +48,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.accounts',
     'apps.tenants',
+    'apps.platform',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +59,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Clears app.tenant_id GUC after every response to prevent context
+    # leaking across pooled connections. Must be last.
+    "apps.core.middleware.TenantContextCleanupMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -134,3 +141,30 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = 'accounts.CustomUser'
 SILENCED_SYSTEM_CHECKS = ["auth.E003"]
+
+# DRF
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# CORS — allow Vite dev server
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+CORS_ALLOW_CREDENTIALS = True
+INSTALLED_APPS += ['corsheaders']  # noqa: F821
+MIDDLEWARE.insert(1, 'corsheaders.middleware.CorsMiddleware')  # noqa: F821
+
+# Session cookie — SameSite=Lax works with same-origin CSRF
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
